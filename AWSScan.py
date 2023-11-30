@@ -7,9 +7,10 @@ import requests
 import logging
 
 class AWSScan:
-    def __init__(self, config_reader):
+    def __init__(self, config_reader, file):
         self.splunk_authorization = config_reader.get_value('Splunk', 'Authorization')
         self.api_url = config_reader.get_value('API', 'url')
+        self.file = file
         self.my_config = Config(
             region_name='us-east-1',
             signature_version='v4',
@@ -44,6 +45,8 @@ class AWSScan:
                     "subdomain": subdomain,
                     "subdomain_content": subdomain_content
                 }
+                #追加subdomain数据到文件
+                self.file.write(subdomain + "\n")
                 self.submit_data(record_data)
 
     def submit_data(self, data):
@@ -65,3 +68,4 @@ class AWSScan:
             logging.error("AWS Failed to submit! data: %s" % str(e))
         except json.JSONDecodeError as e:
             logging.error("AWS Failed to convert data to JSON: %s" % str(e))
+

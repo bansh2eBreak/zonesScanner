@@ -4,11 +4,13 @@ import requests
 import json
 import logging
 
+
 class CloudflareScanner:
-    def __init__(self, config_reader):
+    def __init__(self, config_reader, file):
         self.cf_authorization = config_reader.get_value('cloudflare', 'Authorization')
         self.splunk_authorization = config_reader.get_value('Splunk', 'Authorization')
         self.api_url = config_reader.get_value('API', 'url')
+        self.file = file
 
     def search_domain(self):
         # 设置请求头
@@ -29,7 +31,7 @@ class CloudflareScanner:
             logging.info("CloudFlare API(/client/v4/zones) request successful!")
             return result
         else:
-            #print(f"API请求失败. 状态码: {response.status_code}")
+            # print(f"API请求失败. 状态码: {response.status_code}")
             logging.info("CloudFlare API(/client/v4/zones) request failed, error code is %s" % response.status_code)
 
     def search_dns_records(self, data):
@@ -57,8 +59,9 @@ class CloudflareScanner:
                 all_domain_data.append(result)
                 logging.info("CloudFlare API(/client/v4/zones/%s/dns_records) request successful!" % zone_id)
             else:
-                #print(f"API请求失败. 状态码: {response.status_code}")
-                logging.info("CloudFlare API(/client/v4/zones/%s/dns_records) request failed, error code is %s" % (zone_id, response.status_code,))
+                # print(f"API请求失败. 状态码: {response.status_code}")
+                logging.info("CloudFlare API(/client/v4/zones/%s/dns_records) request failed, error code is %s" % (
+                zone_id, response.status_code,))
 
         all_domain_data_json = json.dumps(all_domain_data)
         return all_domain_data_json
@@ -86,6 +89,9 @@ class CloudflareScanner:
                     "created_time": created_time,
                     "modified_time": modified_time
                 }
+
+                # 追加搜索到的subdomain数据到文件
+                self.file.write(subdomain + "\n")
 
                 headers = {"Content-Type": "application/json",
                            "Authorization": self.splunk_authorization}

@@ -11,13 +11,14 @@ import json
 import logging
 
 class ComlaudeScan:
-    def __init__(self, config_reader):
+    def __init__(self, config_reader, file):
         self.username = config_reader.get_value('comlaude', 'username')
         self.password = config_reader.get_value('comlaude', 'password')
         self.groupid = config_reader.get_value('comlaude', 'groupid')
         self.apikey = config_reader.get_value('comlaude', 'apikey')
         self.splunk_authorization = config_reader.get_value('Splunk', 'Authorization')
         self.api_url = config_reader.get_value('API', 'url')
+        self.file = file
 
     def get_access_token(self):
         url = "https://api.comlaude.com/api_login"  # 替换为实际的 API 接口地址
@@ -84,6 +85,9 @@ class ComlaudeScan:
                 "subdomain": subdomain,
                 "subdomain_content": subdomain_content
             }
+
+            #追加subdomain数据到文件
+            self.file.write(subdomain + "\n")
 
             headers = {"Content-Type": "application/json",
                        "Authorization": self.splunk_authorization}
